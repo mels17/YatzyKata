@@ -57,9 +57,9 @@ public class yatzyTest {
 
     @Test
     public void ifTwoPairsOfDiceWithSameNumberThePlayerScoresTheSumOfTheseDice() {
-        assertComputeScore("two pairs", arrayOf(1, 1, 2, 3, 3), 0);
+        assertComputeScore("two pairs", arrayOf(1, 1, 2, 3, 3), 8);
         assertComputeScore("two pairs", arrayOf(1, 1, 2, 3, 4), 0);
-        assertComputeScore("two pairs", arrayOf(1, 1, 2, 2, 2), 0);
+        assertComputeScore("two pairs", arrayOf(1, 1, 2, 2, 2), 6);
     }
 
     private int computeScore(String category, List<Integer> rolls) {
@@ -79,32 +79,14 @@ public class yatzyTest {
     }
 
     private int sumTwoPairsOfDiceWithSameNumber(List<Integer> rolls) {
-        List<Integer> distinctNumbers = rolls.stream().distinct().collect(Collectors.toList());
-        if (distinctNumbers.size() < 2) return 0;
-        List<Integer> frequency = distinctNumbers.stream()
-                .map(i -> Collections.frequency(rolls, i)).collect(Collectors.toList());
-        return 0;
-//        if(Collections.frequency(frequency, 2) > 2) return 0;
+        List<Integer> listOfNumbersFoundInPairs = getListOfNumbersFoundInPairs(rolls);
+        return listOfNumbersFoundInPairs.size() < 2 ? 0 : listOfNumbersFoundInPairs.stream()
+                .mapToInt(i->i.intValue()).sum() * 2;
 
-
-//        return 2 * (distinctNumbers.get(frequency.lastIndexOf(2)) + distinctNumbers.get(frequency.indexOf(2)));
     }
 
     private int getSumOfHighest(List<Integer> rolls) {
-        List<Integer> listOfNumbersFoundInPairs = new ArrayList<>();
-        for(int i = 0; i < rolls.size(); i++) {
-            for(int j = i+1; j < rolls.size(); j++) {
-                if(rolls.get(i).equals(rolls.get(j))) {
-                    listOfNumbersFoundInPairs.add(rolls.get(i));
-//                    rolls.remove(rolls.get(j));
-                    rolls.set(j, 0);
-                    break;
-                }
-            }
-            rolls.set(i, 0);
-//            rolls.remove(rolls.get(i));
-        }
-
+        List<Integer> listOfNumbersFoundInPairs = getListOfNumbersFoundInPairs(rolls);
 
         return Collections.max(listOfNumbersFoundInPairs) * 2;
 
@@ -112,6 +94,21 @@ public class yatzyTest {
 //        int maxOne = getMaxOfArrayList(rolls);
 //        rolls.set(rolls.indexOf(maxOne), 0);
 //        return getMaxOfArrayList(rolls) + maxOne;
+    }
+
+    private List<Integer> getListOfNumbersFoundInPairs(List<Integer> rolls) {
+        List<Integer> listOfNumbersFoundInPairs = new ArrayList<>();
+        for(int i = 0; i < rolls.size(); i++) {
+            for(int j = i+1; j < rolls.size(); j++) {
+                if(rolls.get(i).equals(rolls.get(j))) {
+                    listOfNumbersFoundInPairs.add(rolls.get(i));
+                    rolls.set(j, 0);
+                    break;
+                }
+            }
+            rolls.set(i, 0);
+        }
+        return listOfNumbersFoundInPairs;
     }
 
     private int getMaxOfArrayList(List<Integer> rolls) {
