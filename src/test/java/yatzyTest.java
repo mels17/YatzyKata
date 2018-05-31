@@ -1,9 +1,12 @@
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
@@ -16,12 +19,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class yatzyTest {
 
-    private void assertComputeScore(String category, int[] rolls, int expected) {
+    private void assertComputeScore(String category, List<Integer> rolls, int expected) {
         assertEquals(expected, computeScore(category, rolls));
     }
 
-    private int[] arrayOf(int first, int second, int third, int fourth, int five) {
-        return new int[]{first, second, third, fourth, five};
+    private List<Integer> arrayOf(int first, int second, int third, int fourth, int five) {
+        return Arrays.asList(first, second, third, fourth, five);
     }
 
     @Test
@@ -46,11 +49,14 @@ public class yatzyTest {
         assertComputeScore("sixes", arrayOf(6, 5, 2, 5, 5), 6);
     }
 
-    private int computeScore(String category, int[] rolls) {
+    @Test
+    public void scoreIsSumOf2HighestMatchingDice() {
+        assertComputeScore("pair", arrayOf(3, 3, 3, 4, 4), 8);
+    }
 
-//        int score = 0;
+    private int computeScore(String category, List<Integer> rolls) {
         HashMap<String, IntSupplier> commands = new HashMap<>();
-        commands.put("chance", () -> Arrays.stream(rolls).sum());
+        commands.put("chance", () -> rolls.stream().mapToInt(i -> i.intValue()).sum());
         commands.put("yatzy", () -> getSumWhenAllNumberAreTheSameOtherwise0(rolls));
         commands.put("ones", () -> getSumBasedOnDiceNumber(rolls, 1));
         commands.put("twos", () -> getSumBasedOnDiceNumber(rolls, 2));
@@ -58,47 +64,32 @@ public class yatzyTest {
         commands.put("fours", () -> getSumBasedOnDiceNumber(rolls, 4));
         commands.put("fives", () -> getSumBasedOnDiceNumber(rolls, 5));
         commands.put("sixes", () -> getSumBasedOnDiceNumber(rolls, 6));
+        commands.put("pair", () -> getSumOfHighest(rolls));
 
-        return commands.get(category).getAsInt();
-//        switch (category) {
-//            case "chance":
-//                score = Arrays.stream(rolls).sum();
-//                break;
-//            case "yatzy":
-//                score = Arrays.stream(rolls)
-//                        .distinct()
-//                        .count() == 1 ? 50 : 0;
-//                break;
-//            case "ones":
-//                score = getSumBasedOnDiceNumber(rolls, 1);
-//                break;
-//            case "twos":
-//                score = getSumBasedOnDiceNumber(rolls, 2);
-//                break;
-//            case "threes":
-//                score = getSumBasedOnDiceNumber(rolls, 3);
-//                break;
-//            case "fours":
-//                score = getSumBasedOnDiceNumber(rolls, 4);
-//                break;
-//            case "fives":
-//                score = getSumBasedOnDiceNumber(rolls, 5);
-//                break;
-//            case "sixes":
-//                score = getSumBasedOnDiceNumber(rolls, 6);
-//                break;
-//        }
-//        return score;
+        return commands.getOrDefault(category, () -> 0).getAsInt();
     }
 
-    private int getSumWhenAllNumberAreTheSameOtherwise0(int[] rolls) {
-        return Arrays.stream(rolls)
+    private int getSumOfHighest(List<Integer> rolls) {
+        int maxOne = rolls.stream()
+                .mapToInt(i -> i.intValue())
+                .max()
+                .getAsInt();
+        int index = rolls.indexOf(maxOne);
+        rolls.set(index, 0);
+        System.out.println(index);
+        return rolls.stream().mapToInt(i -> i.intValue()).max().getAsInt() + maxOne;
+//        return 0;
+    }
+
+    private int getSumWhenAllNumberAreTheSameOtherwise0(List<Integer> rolls) {
+        return rolls.stream()
                 .distinct()
                 .count() == 1 ? 50 : 0;
     }
-    private int getSumBasedOnDiceNumber(int[] rolls, int number) {
-        return Arrays.stream(rolls)
+    private int getSumBasedOnDiceNumber(List<Integer> rolls, int number) {
+        return rolls.stream()
                 .filter(i -> i == number)
+                .mapToInt(i -> i.intValue())
                 .sum();
     }
 }
