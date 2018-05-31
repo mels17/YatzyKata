@@ -1,9 +1,7 @@
-import com.sun.java.swing.plaf.windows.WindowsTreeUI;
 import org.junit.Test;
 
 import java.util.*;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,9 +60,35 @@ public class yatzyTest {
         assertComputeScore("two pairs", arrayOf(1, 1, 2, 2, 2), 6);
     }
 
+    @Test
+    public void ifThereAreThreeDiceWithSameNumber_ReturnSumOfDice() {
+        assertComputeScore("three of a kind", arrayOf(3, 3, 3, 4, 5), 9);
+        assertComputeScore("three of a kind", arrayOf(3, 1, 3, 4, 5), 0);
+        assertComputeScore("three of a kind", arrayOf(3, 3, 3, 3, 1), 9);
+    }
+
+    @Test
+    public void ifThereAreFourDiceWithTheSameNumberReturnSumOfDice() {
+        assertComputeScore("four of a kind", arrayOf(2, 2, 2, 2, 5), 8);
+        assertComputeScore("four of a kind", arrayOf(2, 2, 2, 5, 5), 0);
+        assertComputeScore("four of a kind", arrayOf(2, 2, 2, 2, 2), 8);
+    }
+
+    @Test
+    public void straightDiceTest() {
+        assertComputeScore("small straight", arrayOf(1, 2, 3, 4, 5), 15);
+        assertComputeScore("large straight", arrayOf(2, 3, 4, 5, 6), 20);
+    }
+
+    @Test
+    public void fullHouseTest() {
+        assertComputeScore("full house", arrayOf(1, 1, 2, 2, 2), 8);
+        assertComputeScore("full house", arrayOf(2, 2, 3, 3, 4), 0);
+        assertComputeScore("full house", arrayOf(4, 4, 4, 4, 4), 0);
+    }
     private int computeScore(String category, List<Integer> rolls) {
         HashMap<String, IntSupplier> commands = new HashMap<>();
-        commands.put("chance", () -> rolls.stream().mapToInt(i -> i.intValue()).sum());
+        commands.put("chance", () -> getDiceSum(rolls));
         commands.put("yatzy", () -> getSumWhenAllNumberAreTheSameOtherwise0(rolls));
         commands.put("ones", () -> getSumBasedOnDiceNumber(rolls, 1));
         commands.put("twos", () -> getSumBasedOnDiceNumber(rolls, 2));
@@ -74,26 +98,67 @@ public class yatzyTest {
         commands.put("sixes", () -> getSumBasedOnDiceNumber(rolls, 6));
         commands.put("pair", () -> getSumOfHighest(rolls));
         commands.put("two pairs", () -> sumTwoPairsOfDiceWithSameNumber(rolls));
+        commands.put("three of a kind", () -> sumOfSameKind(rolls, 3));
+        commands.put("four of a kind", () -> sumOfSameKind(rolls, 4));
+        commands.put("small straight", () -> straightGetScore(rolls, 1));
+        commands.put("large straight", () -> straightGetScore(rolls, 2));
+        commands.put("full house", () -> fullHouseGetScore(rolls));
 
         return commands.getOrDefault(category, () -> 0).getAsInt();
     }
 
+    private int fullHouseGetScore(List<Integer> rolls) {
+        int threeSum = sumOfSameKind(rolls, 3);
+        int twoSum = 0;
+        List<Integer> distinctNumbers = rolls.stream().distinct().collect(Collectors.toList());
+        List<Integer> frequencies = distinctNumbers.stream()
+                .map(i -> Collections.frequency(rolls, i))
+                .collect(Collectors.toList());
+
+
+        for (int i = 0; i < frequencies.size(); i++){
+            if(frequencies.get(i) == 2)
+                twoSum = distinctNumbers.get(i) * 2;
+        }
+        if (twoSum == 0 || threeSum == 0) {
+            return 0;
+        }
+        return twoSum + threeSum;
+    }
+
+    private int getDiceSum(List<Integer> rolls) {
+        return rolls.stream().mapToInt(i -> i.intValue()).sum();
+    }
+
+    private int straightGetScore(List<Integer> rolls, int startNumber) {
+        List<Integer> straightDice = IntStream.rangeClosed(startNumber, startNumber + 4)
+                .boxed().collect(Collectors.toList());
+        return  rolls.equals(straightDice) ? getDiceSum(straightDice) : 0;
+    }
+
+    private int sumOfSameKind(List<Integer> rolls, int number) {
+
+        List<Integer> distinctNumbers = rolls.stream().distinct().collect(Collectors.toList());
+        List<Integer> frequencies = distinctNumbers.stream()
+                .map(i -> Collections.frequency(rolls, i))
+                .collect(Collectors.toList());
+
+
+        for (int i = 0; i < frequencies.size(); i++){
+            if(frequencies.get(i) >= number) return distinctNumbers.get(i) * number;
+        }
+        return 0;
+    }
+
     private int sumTwoPairsOfDiceWithSameNumber(List<Integer> rolls) {
         List<Integer> listOfNumbersFoundInPairs = getListOfNumbersFoundInPairs(rolls);
-        return listOfNumbersFoundInPairs.size() < 2 ? 0 : listOfNumbersFoundInPairs.stream()
-                .mapToInt(i->i.intValue()).sum() * 2;
+        return listOfNumbersFoundInPairs.size() < 2 ? 0 : getDiceSum(listOfNumbersFoundInPairs) * 2;
 
     }
 
     private int getSumOfHighest(List<Integer> rolls) {
         List<Integer> listOfNumbersFoundInPairs = getListOfNumbersFoundInPairs(rolls);
-
         return Collections.max(listOfNumbersFoundInPairs) * 2;
-
-
-//        int maxOne = getMaxOfArrayList(rolls);
-//        rolls.set(rolls.indexOf(maxOne), 0);
-//        return getMaxOfArrayList(rolls) + maxOne;
     }
 
     private List<Integer> getListOfNumbersFoundInPairs(List<Integer> rolls) {
