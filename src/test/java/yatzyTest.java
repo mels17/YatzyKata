@@ -3,9 +3,6 @@ import org.junit.Test;
 import yatzy.Yatzy;
 
 import java.util.*;
-import java.util.function.IntSupplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 

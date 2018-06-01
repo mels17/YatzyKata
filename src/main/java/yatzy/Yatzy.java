@@ -10,6 +10,10 @@ import java.util.stream.IntStream;
 
 public class Yatzy {
     public int computeScore(String category, List<Integer> rolls) {
+        /**
+         * Command patters with IntSupplier as value - Good?
+         * Object and Interfaces as value - I thought it would be over-complicating this. Thoughts?
+         */
         HashMap<String, IntSupplier> commands = new HashMap<>();
         commands.put("chance", () -> getDiceSum(rolls));
         commands.put("yatzy", () -> getSumWhenAllNumberAreTheSameOtherwise0(rolls));
@@ -59,6 +63,9 @@ public class Yatzy {
         return  rolls.equals(straightDice) ? getDiceSum(straightDice) : 0;
     }
 
+    /**
+     * Found distinct numbers in the array to reduce number of iterations. Required? Better way?
+     */
     private int sumOfSameKind(List<Integer> rolls, int number) {
 
         List<Integer> distinctNumbers = rolls.stream().distinct().collect(Collectors.toList());
@@ -84,6 +91,9 @@ public class Yatzy {
         return Collections.max(listOfNumbersFoundInPairs) * 2;
     }
 
+    /**
+     * Two for loops - efficiency?
+     */
     private List<Integer> getListOfNumbersFoundInPairs(List<Integer> rolls) {
         List<Integer> listOfNumbersFoundInPairs = new ArrayList<>();
         for(int i = 0; i < rolls.size(); i++) {
@@ -97,13 +107,6 @@ public class Yatzy {
             rolls.set(i, 0);
         }
         return listOfNumbersFoundInPairs;
-    }
-
-    private int getMaxOfArrayList(List<Integer> rolls) {
-        return rolls.stream()
-                .mapToInt(i -> i.intValue())
-                .max()
-                .getAsInt();
     }
 
     private int getSumWhenAllNumberAreTheSameOtherwise0(List<Integer> rolls) {
